@@ -12,6 +12,9 @@ def get_verb_node(word: str, row: ConlluDbRow) -> Node:
 
 def get_all_grammar(node: Node) -> dict[str, str]:
 
+    if node["feats"] == "_":
+        return dict()
+
     result = {
         k: v
         for k, v
