@@ -4,7 +4,7 @@ from tools.custom_types import ConlluDbRow, Node
 def get_verb_node(word: str, row: ConlluDbRow) -> Node:
 
     for _, node in row["tree"].nodes.items():
-        if node["word"] == word:
+        if node["word"] == word and node["ctag"] == "VERB":
             return node
 
     return None
