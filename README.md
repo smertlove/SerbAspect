@@ -14,7 +14,7 @@ Finally, various features were extracted from the DependencyGraph structures and
 - word - form of a verb, original case preserved
 - aspect - grammar aspect of a lemma (`perf`, `imp` or `both`)
 - disambig - grammar aspect of a verb form in context (`perf`, `imp` or `both`)
-- db_id - UD_Serbian-SET entry id
+- db_id - UD_Serbian-SET sent_id
 - text - raw text context
 - Gender - grammatical gender of a verb (`Fem`, `Masc`, `Neut` or `nan`)
 - Mood - grammatical mood of a verb (`Ind`, `Imp` or `nan`)
@@ -24,12 +24,12 @@ Finally, various features were extracted from the DependencyGraph structures and
 - Tense - grammatical of a verb (`Pres`, `Past`, `Fut` or `nan`)
 - VerbForm - grammatical of a verb (`Fin`, `Part`, `Inf` or `nan`)
 - Voice - grammatical of a verb (`Act` or `nan`)
-- l_tok_3 - 3rd token on the left of the target verb (or `[PAD]`)
-- l_tok_2 - 2nd token on the left of the target verb (or `[PAD]`)
-- l_tok_1 - 1st token on the left of the target verb (or `[PAD]`)
-- r_tok_1 - 1st token on the right of the target verb (or `[PAD]`)
-- r_tok_2 - 2nd token on the right of the target verb (or `[PAD]`)
-- r_tok_3 - 3rd token on the right of the target verb (or `[PAD]`)
+- l_tok_3 -- 3rd token on the left of the target verb (or `[PAD]`)
+- l_tok_2 -- 2nd token on the left of the target verb (or `[PAD]`)
+- l_tok_1 -- 1st token on the left of the target verb (or `[PAD]`)
+- r_tok_1 -- 1st token on the right of the target verb (or `[PAD]`)
+- r_tok_2 -- 2nd token on the right of the target verb (or `[PAD]`)
+- r_tok_3 -- 3rd token on the right of the target verb (or `[PAD]`)
 - l_gr_1 - 3rd left grapheme of the target verb (or `[PAD]`)
 - l_gr_2 - 2nd left grapheme of the target verb (or `[PAD]`)
 - l_gr_3 - 1st left grapheme of the target verb (or `[PAD]`)
