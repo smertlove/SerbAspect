@@ -10,40 +10,40 @@ The grammar aspect of a verb, which is our target variable, is not present in Se
 
 Finally, various features were extracted from the DependencyGraph structures and appended to the dataset. These features were selected for their potential to improve the performance of classical ML models, like Decision Trees or Gradient Boostings. The final dataset structure can be examined below:
 
-- lemma - lemma of a verb, latin lowercased
-- word - form of a verb, original case preserved
-- aspect - grammar aspect of a lemma (`perf`, `imp` or `both`)
-- disambig - grammar aspect of a verb form in context (`perf`, `imp` or `both`)
-- db_id - UD_Serbian-SET sent_id
-- text - raw text context
-- Gender - grammatical gender of a verb (`Fem`, `Masc`, `Neut` or `nan`)
-- Mood - grammatical mood of a verb (`Ind`, `Imp` or `nan`)
-- Number - grammatical number of a verb (`Sing`, `Plur` or `nan`)
-- POS - part of speech of a verb (`VERB` or `nan`)
-- Person - grammatical of a verb (1, 2, 3 or `nan`)
-- Tense - grammatical of a verb (`Pres`, `Past`, `Fut` or `nan`)
-- VerbForm - grammatical of a verb (`Fin`, `Part`, `Inf` or `nan`)
-- Voice - grammatical of a verb (`Act` or `nan`)
-- l_tok_3 -- 3rd token on the left of the target verb (or `[PAD]`)
-- l_tok_2 -- 2nd token on the left of the target verb (or `[PAD]`)
-- l_tok_1 -- 1st token on the left of the target verb (or `[PAD]`)
-- r_tok_1 -- 1st token on the right of the target verb (or `[PAD]`)
-- r_tok_2 -- 2nd token on the right of the target verb (or `[PAD]`)
-- r_tok_3 -- 3rd token on the right of the target verb (or `[PAD]`)
-- l_gr_1 - 3rd left grapheme of the target verb (or `[PAD]`)
-- l_gr_2 - 2nd left grapheme of the target verb (or `[PAD]`)
-- l_gr_3 - 1st left grapheme of the target verb (or `[PAD]`)
-- r_gr_1 - 1st right grapheme of the target verb (or `[PAD]`)
-- r_gr_2 - 2nd right grapheme of the target verb (or `[PAD]`)
-- r_gr_3 - 3rd right grapheme of the target verb (or `[PAD]`)
-- nsubj - a list of frequent nominal subjects of the verb (>5 occurances)
-- nsubj_count - number of nominal subjects of the verb
-- obj - a list of frequent direct objects (>5 occurances)
-- obj_count - number of direct objects
-- obl - a list of frequent oblique nominals of the verb (>5 occurances)
-- obl_count - number of oblique nominals of the verb
-- advmod - a list of frequent adverbal modifiers of the verb (>5 occurances)
-- advmod_count - number of adverbal modifiers of the verb
+- lemma — lemma of a verb, latin lowercased
+- word — form of a verb, original case preserved
+- aspect — grammar aspect of a lemma (`perf`, `imp` or `both`)
+- disambig — grammar aspect of a verb form in context (`perf`, `imp` or `both`)
+- db_id — UD_Serbian-SET sent_id
+- text — raw text context
+- Gender — grammatical gender of a verb (`Fem`, `Masc`, `Neut` or `nan`)
+- Mood — grammatical mood of a verb (`Ind`, `Imp` or `nan`)
+- Number — grammatical number of a verb (`Sing`, `Plur` or `nan`)
+- POS — part of speech of a verb (`VERB` or `nan`)
+- Person — grammatical of a verb (1, 2, 3 or `nan`)
+- Tense — grammatical of a verb (`Pres`, `Past`, `Fut` or `nan`)
+- VerbForm — grammatical of a verb (`Fin`, `Part`, `Inf` or `nan`)
+- Voice — grammatical of a verb (`Act` or `nan`)
+- l_tok_3 — 3rd token on the left of the target verb (or `[PAD]`)
+- l_tok_2 — 2nd token on the left of the target verb (or `[PAD]`)
+- l_tok_1 — 1st token on the left of the target verb (or `[PAD]`)
+- r_tok_1 — 1st token on the right of the target verb (or `[PAD]`)
+- r_tok_2 — 2nd token on the right of the target verb (or `[PAD]`)
+- r_tok_3 — 3rd token on the right of the target verb (or `[PAD]`)
+- l_gr_1 — 3rd left grapheme of the target verb (or `[PAD]`)
+- l_gr_2 — 2nd left grapheme of the target verb (or `[PAD]`)
+- l_gr_3 — 1st left grapheme of the target verb (or `[PAD]`)
+- r_gr_1 — 1st right grapheme of the target verb (or `[PAD]`)
+- r_gr_2 — 2nd right grapheme of the target verb (or `[PAD]`)
+- r_gr_3 — 3rd right grapheme of the target verb (or `[PAD]`)
+- nsubj — a list of frequent nominal subjects of the verb (>5 occurances)
+- nsubj_count — number of nominal subjects of the verb
+- obj — a list of frequent direct objects (>5 occurances)
+- obj_count — number of direct objects
+- obl — a list of frequent oblique nominals of the verb (>5 occurances)
+- obl_count — number of oblique nominals of the verb
+- advmod — a list of frequent adverbal modifiers of the verb (>5 occurances)
+- advmod_count — number of adverbal modifiers of the verb
 
 ## References
 
