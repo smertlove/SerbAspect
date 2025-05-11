@@ -20,7 +20,7 @@ Finally, various features were extracted from the DependencyGraph structures and
 - Mood — grammatical mood of a verb (`Ind`, `Imp` or `nan`)
 - Number — grammatical number of a verb (`Sing`, `Plur` or `nan`)
 - POS — part of speech of a verb (`VERB` or `nan`)
-- Person — grammatical person of a verb (1, 2, 3 or `nan`)
+- Person — grammatical person of a verb (`1`, `2`, `3` or `nan`)
 - Tense — grammatical tense of a verb (`Pres`, `Past`, `Fut` or `nan`)
 - VerbForm — grammatical form of a verb (`Fin`, `Part`, `Inf` or `nan`)
 - Voice — grammatical voice of a verb (`Act` or `nan`)
