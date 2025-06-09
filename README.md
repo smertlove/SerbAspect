@@ -44,6 +44,8 @@ Finally, various features were extracted from the DependencyGraph structures and
 - obl_count — number of oblique nominals of the verb
 - advmod — a list of frequent adverbal modifiers of the verb (>5 occurances)
 - advmod_count — number of adverbal modifiers of the verb
+- polarity — polarity of a verb (`pos`, or `neg`)
+- polarity_word —  a word marking polarity if it is negative
 
 ## References
 
