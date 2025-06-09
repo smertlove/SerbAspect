@@ -45,7 +45,7 @@ Finally, various features were extracted from the DependencyGraph structures and
 - advmod — a list of frequent adverbal modifiers of the verb (>5 occurances)
 - advmod_count — number of adverbal modifiers of the verb
 - polarity — polarity of a verb (`pos`, or `neg`)
-- polarity_word —  a word marking polarity if it is negative
+- polarity_word —  a word marking polarity if it is negative (or `[PAD]`)
 
 ## References
 
