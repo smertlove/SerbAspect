@@ -1,0 +1,137 @@
+experiment_name	experiment_group	model_name	PCA	F1_cv	F1_holdout	F1_unkn
+all categorical	Naieve	LogisticRegression	False	0.841	0.887	0.765
+all categorical	Naieve	DecisionTreeClassifier	False	0.949	0.929	0.542
+all categorical	Naieve	LGBMClassifier	False	0.971	0.96	0.548
+all categorical	Naieve	MLPClassifier	False	0.966	0.958	0.686
+all categorical PCA	Naieve	LogisticRegression	True	0.711	0.742	0.703
+all categorical PCA	Naieve	DecisionTreeClassifier	True	0.886	0.82	0.587
+all categorical PCA	Naieve	LGBMClassifier	True	0.918	0.878	0.643
+all categorical PCA	Naieve	MLPClassifier	True	0.907	0.882	0.568
+6_graphemes	Graphemes	LogisticRegression	False	0.831	0.873	0.764
+6_graphemes	Graphemes	DecisionTreeClassifier	False	0.953	0.955	0.54
+6_graphemes	Graphemes	LGBMClassifier	False	0.968	0.967	0.514
+6_graphemes	Graphemes	MLPClassifier	False	0.971	0.967	0.688
+4_graphemes	Graphemes	LogisticRegression	False	0.786	0.832	0.871
+4_graphemes	Graphemes	DecisionTreeClassifier	False	0.884	0.896	0.599
+4_graphemes	Graphemes	LGBMClassifier	False	0.89	0.918	0.777
+4_graphemes	Graphemes	MLPClassifier	False	0.886	0.904	0.766
+2_graphemes	Graphemes	LogisticRegression	False	0.683	0.71	0.754
+2_graphemes	Graphemes	DecisionTreeClassifier	False	0.697	0.685	0.797
+2_graphemes	Graphemes	LGBMClassifier	False	0.694	0.683	0.797
+2_graphemes	Graphemes	MLPClassifier	False	0.688	0.69	0.794
+sufs	Graphemes	LogisticRegression	False	0.945	0.955	0.452
+sufs	Graphemes	DecisionTreeClassifier	False	0.961	0.955	0.326
+sufs	Graphemes	LGBMClassifier	False	0.666	0.702	0.675
+sufs	Graphemes	MLPClassifier	False	0.974	0.975	0.386
+6_graphemes PCA	Graphemes	LogisticRegression	True	0.718	0.72	0.683
+6_graphemes PCA	Graphemes	DecisionTreeClassifier	True	0.934	0.887	0.527
+6_graphemes PCA	Graphemes	LGBMClassifier	True	0.948	0.925	0.591
+6_graphemes PCA	Graphemes	MLPClassifier	True	0.942	0.944	0.621
+4_graphemes PCA	Graphemes	LogisticRegression	True	0.711	0.677	0.683
+4_graphemes PCA	Graphemes	DecisionTreeClassifier	True	0.874	0.9	0.647
+4_graphemes PCA	Graphemes	LGBMClassifier	True	0.888	0.911	0.762
+4_graphemes PCA	Graphemes	MLPClassifier	True	0.869	0.896	0.83
+2_graphemes PCA	Graphemes	LogisticRegression	True	0.679	0.708	0.754
+2_graphemes PCA	Graphemes	DecisionTreeClassifier	True	0.698	0.685	0.797
+2_graphemes PCA	Graphemes	LGBMClassifier	True	0.699	0.685	0.797
+2_graphemes PCA	Graphemes	MLPClassifier	True	0.692	0.699	0.787
+sufs PCA	Graphemes	LogisticRegression	True	0.634	0.632	0.328
+sufs PCA	Graphemes	DecisionTreeClassifier	True	0.938	0.779	0.323
+sufs PCA	Graphemes	LGBMClassifier	True	0.953	0.901	0.475
+sufs PCA	Graphemes	MLPClassifier	True	0.764	0.711	0.368
+all grammar	Grammar	LogisticRegression	False	0.705	0.734	0.687
+all grammar	Grammar	DecisionTreeClassifier	False	0.701	0.721	0.655
+all grammar	Grammar	LGBMClassifier	False	0.704	0.734	0.676
+all grammar	Grammar	MLPClassifier	False	0.701	0.725	0.662
+only categories grammar	Grammar	LogisticRegression	False	0.704	0.743	0.688
+only categories grammar	Grammar	DecisionTreeClassifier	False	0.706	0.738	0.692
+only categories grammar	Grammar	LGBMClassifier	False	0.707	0.738	0.694
+only categories grammar	Grammar	MLPClassifier	False	0.704	0.743	0.69
+no categories grammar	Grammar	LogisticRegression	False	0.508	0.479	0.552
+no categories grammar	Grammar	DecisionTreeClassifier	False	0.519	0.484	0.55
+no categories grammar	Grammar	LGBMClassifier	False	0.517	0.48	0.55
+no categories grammar	Grammar	MLPClassifier	False	0.506	0.484	0.546
+all grammar PCA	Grammar	LogisticRegression	True	0.704	0.738	0.694
+all grammar PCA	Grammar	DecisionTreeClassifier	True	0.698	0.726	0.649
+all grammar PCA	Grammar	LGBMClassifier	True	0.702	0.732	0.654
+all grammar PCA	Grammar	MLPClassifier	True	0.706	0.733	0.688
+only categories grammar PCA	Grammar	LogisticRegression	True	0.704	0.738	0.694
+only categories grammar PCA	Grammar	DecisionTreeClassifier	True	0.706	0.738	0.692
+only categories grammar PCA	Grammar	LGBMClassifier	True	0.706	0.738	0.694
+only categories grammar PCA	Grammar	MLPClassifier	True	0.703	0.74	0.696
+no categories grammar PCA	Grammar	LogisticRegression	True	0.508	0.479	0.55
+no categories grammar PCA	Grammar	DecisionTreeClassifier	True	0.519	0.484	0.55
+no categories grammar PCA	Grammar	LGBMClassifier	True	0.521	0.484	0.548
+no categories grammar PCA	Grammar	MLPClassifier	True	0.518	0.491	0.541
+grammar and graphemes	GrammarAndGraphemes	LogisticRegression	False	0.796	0.869	0.904
+grammar and graphemes PCA	GrammarAndGraphemes	LogisticRegression	False	0.705	0.681	0.703
+grammar and graphemes	GrammarAndGraphemes	DecisionTreeClassifier	False	0.893	0.911	0.755
+grammar and graphemes PCA	GrammarAndGraphemes	DecisionTreeClassifier	False	0.878	0.907	0.67
+grammar and graphemes	GrammarAndGraphemes	LGBMClassifier	False	0.895	0.913	0.763
+grammar and graphemes PCA	GrammarAndGraphemes	LGBMClassifier	False	0.89	0.913	0.742
+grammar and graphemes	GrammarAndGraphemes	MLPClassifier	False	0.893	0.916	0.747
+grammar and graphemes PCA	GrammarAndGraphemes	MLPClassifier	False	0.872	0.916	0.788
+word embeddings	W2V	LogisticRegression	False	0.928	0.949	0.826
+word embeddings	W2V	DecisionTreeClassifier	False	0.936	0.92	0.717
+word embeddings	W2V	LGBMClassifier	False	0.973	0.962	0.918
+word embeddings	W2V	MLPClassifier	False	0.982	0.976	0.915
+lemma embeddings	W2V	LogisticRegression	False	1.0	1.0	0.556
+lemma embeddings	W2V	DecisionTreeClassifier	False	1.0	1.0	0.61
+lemma embeddings	W2V	LGBMClassifier	False	1.0	1.0	0.576
+lemma embeddings	W2V	MLPClassifier	False	1.0	1.0	0.532
+word and lemma embeddings 	W2V	LogisticRegression	False	0.936	0.965	0.486
+word and lemma embeddings 	W2V	DecisionTreeClassifier	False	0.972	1.0	0.679
+word and lemma embeddings 	W2V	LGBMClassifier	False	0.989	1.0	0.847
+word and lemma embeddings 	W2V	MLPClassifier	False	0.993	1.0	0.896
+word and lemma embeddings many	W2V	LogisticRegression	False	0.935	0.936	0.486
+word and lemma embeddings many	W2V	DecisionTreeClassifier	False	0.999	1.0	0.647
+word and lemma embeddings many	W2V	LGBMClassifier	False	1.0	1.0	0.829
+word and lemma embeddings many	W2V	MLPClassifier	False	0.998	1.0	0.896
+word embeddings many	W2V	LogisticRegression	False	0.941	0.953	0.824
+word embeddings many	W2V	DecisionTreeClassifier	False	0.997	0.92	0.717
+word embeddings many	W2V	LGBMClassifier	False	0.998	0.965	0.902
+word embeddings many	W2V	MLPClassifier	False	0.999	0.976	0.897
+word embeddings nsubj	W2V_ext	LogisticRegression	False	0.929	0.947	0.834
+word embeddings nsubj	W2V_ext	DecisionTreeClassifier	False	0.931	0.922	0.652
+word embeddings nsubj	W2V_ext	LGBMClassifier	False	0.974	0.965	0.951
+word embeddings nsubj	W2V_ext	MLPClassifier	False	0.967	0.952	0.865
+word embeddings obj	W2V_ext	LogisticRegression	False	0.932	0.956	0.752
+word embeddings obj	W2V_ext	DecisionTreeClassifier	False	0.933	0.922	0.674
+word embeddings obj	W2V_ext	LGBMClassifier	False	0.971	0.964	0.938
+word embeddings obj	W2V_ext	MLPClassifier	False	0.981	0.96	0.892
+word embeddings obl	W2V_ext	LogisticRegression	False	0.932	0.912	0.743
+word embeddings obl	W2V_ext	DecisionTreeClassifier	False	0.933	0.929	0.667
+word embeddings obl	W2V_ext	LGBMClassifier	False	0.971	0.965	0.94
+word embeddings obl	W2V_ext	MLPClassifier	False	0.981	0.958	0.888
+word embeddings advmod	W2V_ext	LogisticRegression	False	0.935	0.955	0.807
+word embeddings advmod	W2V_ext	DecisionTreeClassifier	False	0.933	0.922	0.723
+word embeddings advmod	W2V_ext	LGBMClassifier	False	0.972	0.964	0.913
+word embeddings advmod	W2V_ext	MLPClassifier	False	0.978	0.971	0.876
+word embeddings ctx	W2V_ext	LogisticRegression	False	0.928	0.931	0.685
+word embeddings ctx	W2V_ext	DecisionTreeClassifier	False	0.919	0.911	0.677
+word embeddings ctx	W2V_ext	LGBMClassifier	False	0.973	0.962	0.924
+word embeddings ctx	W2V_ext	MLPClassifier	False	0.967	0.967	0.91
+word embeddings ctx 3	W2V_ext_ctx	LogisticRegression	False	0.928	0.931	0.685
+word embeddings ctx 3	W2V_ext_ctx	DecisionTreeClassifier	False	0.919	0.911	0.677
+word embeddings ctx 3	W2V_ext_ctx	LGBMClassifier	False	0.973	0.962	0.924
+word embeddings ctx 3	W2V_ext_ctx	MLPClassifier	False	0.967	0.967	0.91
+word embeddings ctx 2	W2V_ext_ctx	LogisticRegression	False	0.929	0.929	0.687
+word embeddings ctx 2	W2V_ext_ctx	DecisionTreeClassifier	False	0.915	0.92	0.673
+word embeddings ctx 2	W2V_ext_ctx	LGBMClassifier	False	0.97	0.96	0.931
+word embeddings ctx 2	W2V_ext_ctx	MLPClassifier	False	0.964	0.963	0.9
+word embeddings ctx 1	W2V_ext_ctx	LogisticRegression	False	0.923	0.931	0.702
+word embeddings ctx 1	W2V_ext_ctx	DecisionTreeClassifier	False	0.918	0.888	0.709
+word embeddings ctx 1	W2V_ext_ctx	LGBMClassifier	False	0.973	0.967	0.949
+word embeddings ctx 1	W2V_ext_ctx	MLPClassifier	False	0.953	0.932	0.887
+word embeddings ctx 3 split	W2V_ext_ctx	LogisticRegression	False	0.927	0.888	0.712
+word embeddings ctx 3 split	W2V_ext_ctx	DecisionTreeClassifier	False	0.905	0.9	0.676
+word embeddings ctx 3 split	W2V_ext_ctx	LGBMClassifier	False	0.97	0.962	0.926
+word embeddings ctx 3 split	W2V_ext_ctx	MLPClassifier	False	0.945	0.93	0.854
+word embeddings ctx 2 split	W2V_ext_ctx	LogisticRegression	False	0.931	0.89	0.734
+word embeddings ctx 2 split	W2V_ext_ctx	DecisionTreeClassifier	False	0.913	0.896	0.723
+word embeddings ctx 2 split	W2V_ext_ctx	LGBMClassifier	False	0.966	0.956	0.926
+word embeddings ctx 2 split	W2V_ext_ctx	MLPClassifier	False	0.944	0.922	0.87
+word embeddings ctx 1 split	W2V_ext_ctx	LogisticRegression	False	0.919	0.904	0.701
+word embeddings ctx 1 split	W2V_ext_ctx	DecisionTreeClassifier	False	0.907	0.886	0.681
+word embeddings ctx 1 split	W2V_ext_ctx	LGBMClassifier	False	0.974	0.965	0.935
+word embeddings ctx 1 split	W2V_ext_ctx	MLPClassifier	False	0.936	0.915	0.855
