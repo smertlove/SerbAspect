@@ -1,0 +1,797 @@
+---
+title: "SerbAspect"
+author: "Kirill Soloshenko"
+date: "2025-05-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+# This removes all variables from the workspace
+rm(list = ls())
+```
+
+# SerbAspect
+
+Serbian grammar aspect prediction experiments.
+
+The main idea of the research is such: the verbal aspect is not annotated in the UD_Serbian-SET dataset [1]; however, the available data and tools are expected to be sufficient to annotate a small subset of the data manually and subsequently train a model capable of accurately predicting the verbal aspect for nearly the entire general population.
+
+## Data preparation
+
+The Serbian Universal Dependencies (UD) train subset [1] was used as the main and only source of marked down data. The data was parsed into NLTK DependencyGraph structures [2], and verb lemmas were mapped on their corresponding dataset entries. To prevent data undersampling and to ensure adequate representation, the dataset was then filtered to retain only lemmas with at least 5 distinct occurrences. Entries exhibiting identical forms of the target verb lemma were also removed. Following these preprocessing steps, we have ended up with 4959 rows of data.
+
+The grammar aspect of a verb, which is our target variable, is not present in Serbian UD dataset. The manual annotation process was conducted using Serbian verb government dictionary [3]. For the biaspectual verbs we have also tried aspectual disambiguation assignment, although it was challenging and probably useless as even within contextual information they tend to still be rock solid ambiguous.
+
+Finally, various features were extracted from the DependencyGraph structures and appended to the dataset. These features were selected for their potential to improve the performance of classical ML models, like Decision Trees or Gradient Boostings. The final dataset structure can be examined below:
+
+- lemma — lemma of a verb, latin lowercased
+- word — form of a verb, original case preserved
+- aspect — grammar aspect of a lemma (`perf`, `imp` or `both`)
+- disambig — grammar aspect of a verb form in context (`perf`, `imp` or `both`)
+- db_id — UD_Serbian-SET sent_id
+- text — raw text context
+- Gender — grammatical gender of a verb (`Fem`, `Masc`, `Neut` or `nan`)
+- Mood — grammatical mood of a verb (`Ind`, `Imp` or `nan`)
+- Number — grammatical number of a verb (`Sing`, `Plur` or `nan`)
+- POS — part of speech of a verb (`VERB` or `nan`)
+- Person — grammatical person of a verb (`1`, `2`, `3` or `nan`)
+- Tense — grammatical tense of a verb (`Pres`, `Past`, `Fut` or `nan`)
+- VerbForm — grammatical form of a verb (`Fin`, `Part`, `Inf` or `nan`)
+- Voice — grammatical voice of a verb (`Act` or `nan`)
+- l_tok_3 — 3rd token on the left of the target verb (or `[PAD]`)
+- l_tok_2 — 2nd token on the left of the target verb (or `[PAD]`)
+- l_tok_1 — 1st token on the left of the target verb (or `[PAD]`)
+- r_tok_1 — 1st token on the right of the target verb (or `[PAD]`)
+- r_tok_2 — 2nd token on the right of the target verb (or `[PAD]`)
+- r_tok_3 — 3rd token on the right of the target verb (or `[PAD]`)
+- l_gr_1 — 1st left grapheme of the target verb (or `[PAD]`)
+- l_gr_2 — 2nd left grapheme of the target verb (or `[PAD]`)
+- l_gr_3 — 3rd left grapheme of the target verb (or `[PAD]`)
+- r_gr_1 — 1st right grapheme of the target verb (or `[PAD]`)
+- r_gr_2 — 2nd right grapheme of the target verb (or `[PAD]`)
+- r_gr_3 — 3rd right grapheme of the target verb (or `[PAD]`)
+- nsubj — a list of frequent nominal subjects of the verb (>5 occurances)
+- nsubj_count — number of nominal subjects of the verb
+- obj — a list of frequent direct objects (>5 occurances)
+- obj_count — number of direct objects
+- obl — a list of frequent oblique nominals of the verb (>5 occurances)
+- obl_count — number of oblique nominals of the verb
+- advmod — a list of frequent adverbal modifiers of the verb (>5 occurances)
+- advmod_count — number of adverbal modifiers of the verb
+- polarity — polarity of a verb (`pos`, or `neg`)
+- polarity_word — a word marking polarity if it is negative (or `[PAD]`)
+
+### Imports and data load
+
+```{r load_stuff}
+options(warn=-1)
+
+library(tidyverse)
+library(skimr)
+library(dplyr)
+library(grid) 
+library(gridExtra)
+library(forcats)
+library(corrplot)
+library(fastDummies)
+library(effsize)
+library(plotly)
+
+data <- read_tsv(
+  "https://github.com/smertlove/SerbAspect/raw/refs/heads/main/data/datasetForAnalysis.csv",
+  quote = "",
+  col_names = TRUE,
+) |> select(
+  -text,
+  -word,
+  -db_id,
+  -POS,
+  -l_tok_3,
+  -l_tok_2,
+  -l_tok_1,
+  -r_tok_1,
+  -r_tok_2,
+  -r_tok_3,
+  -nsubj,
+  -obj,
+  -obl,
+  -advmod,
+  -polarity_word,
+)
+
+data <- data[, -1]
+
+metrics_initial <- read_tsv(
+  "https://github.com/smertlove/SerbAspect/raw/refs/heads/main/data/all_initial.csv",
+  quote = "",
+  col_names = TRUE,
+)
+
+metrics_resample <- read_tsv(
+  "https://github.com/smertlove/SerbAspect/raw/refs/heads/main/data/all_resample.csv",
+  quote = "",
+  col_names = TRUE,
+)
+
+metrics_disambig <- read_tsv(
+  "https://github.com/smertlove/SerbAspect/raw/refs/heads/main/data/all_disambig.csv",
+  quote = "",
+  col_names = TRUE,
+)
+
+
+metrics_initial$dataset_version <- "original"
+metrics_resample$dataset_version <- "resample"
+metrics_disambig$dataset_version <- "disambig"
+
+combined_metrics <- rbind(metrics_disambig, metrics_resample, metrics_initial)
+combined_metrics$dataset_version <- factor(combined_metrics$dataset_version)
+```
+
+### Fill `NA` with `[PAD]`
+
+```{r}
+# Lets see if there is any NA values in the dataset
+data |>
+  map_int(~sum(is.na(.)))
+```
+```{r}
+# There is. Lets go ahead and fill them with `[PAD]`
+data <- data |>
+  mutate(
+    across(
+      everything(), 
+      ~ifelse(
+        is.na(.),
+        "[PAD]",
+        .
+      )
+    )
+  )
+
+# Now there is no NA values
+data |>
+  map_int(~sum(is.na(.)))
+```
+```{r factorise}
+# Here we change character data type to factor
+data <- data |>
+  mutate(
+    across(
+      where(is.character),
+      as.factor
+    )
+  )
+glimpse(data)
+```
+
+```{r}
+# We will make many barblots during this analysis. Lets make a function for it to keep the code a bit cleaner.
+create_barplot <- function(data, column_name, rot = 0, custom_order = NULL) {
+  
+    if (!is.null(custom_order)) {
+    data[[column_name]] <- factor(
+      data[[column_name]],
+      levels = custom_order
+    )
+    plot_data <- data
+    } else {
+      plot_data <- data |>
+        mutate(!!column_name := fct_reorder(
+            .data[[column_name]], 
+            .data[[column_name]], 
+            function(x) -length(x)
+          )
+        )
+    }
+  
+  
+  ggplot(
+    plot_data,
+    aes(x = .data[[column_name]],
+        fill = .data[[column_name]])
+  ) +
+    geom_bar() +
+    theme_minimal() +
+    labs(
+      title = paste(column_name),
+      x = column_name
+    ) +
+    theme(
+      axis.text.x = element_text(
+        angle = rot,
+        hjust = 1
+      )
+    )
+}
+
+```
+
+## Training dataset 
+
+The distributions of the two target variables are presented on the barplots below. It is important to note that `both` values are undersampled, which may lead to model underfitting and consequently poor predictive performance [4] _цитата неточная_ Nevertheless, since this class imbalance reflects real-world conditions, we have chosen to retain these samples in the training dataset. By preserving this distribution, our models are encouraged to learn from the data as it naturally occurs, even if the representation is limited.
+
+```{r}
+grid.arrange(
+  create_barplot(data, "aspect", 45, custom_order = c("imp", "perf", "both")),
+  create_barplot(data, "disambig", 45, custom_order = c("imp", "perf", "both")) + labs(title = "disambiguated aspect"),
+  ncol = 2,
+  top = textGrob(
+    "Target variables", 
+    gp=gpar(
+      fontsize=20,
+      fontface="bold"
+    )
+  )
+) + scale_fill_brewer(palette="Accent")
+```
+
+The presence of the value "both" in the "disambig" variable can also be observed here. This occurs because in Serbian certain biaspectual verbs cannot be fully disambiguated even within their contextual usage. A prominent example is the verb "kazati," which ranks as the fourth most frequent verb in our dataset, as illustrated below. It should be noted that in the "disambig" variable some biaspectual verbs may have been incorrectly annotated due to the annotator's limited proficiency in Serbian. Nevertheless, we will still proceed with training models using this target variable, as the number of incorrectly annotated biaspectual verbs is very small and therefore the impact of annotator errors is expected to be minimal and unlikely to significantly affect the overall training process.
+```{r}
+
+lemma_counts <- data |>
+  group_by(
+    lemma,
+    aspect,
+    disambig
+  ) |>
+  summarize(
+    lemma_count = n(),
+    .groups="drop"
+  )
+
+lemma_filtered <- lemma_counts |>
+  filter(lemma_count > 30)
+
+lemma_filtered |>
+  ggplot(
+    aes(
+      x = reorder(lemma, -lemma_count),
+      y = lemma_count,
+      fill = aspect
+    )
+  ) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    title = "Word form frequency distribution",
+    x = "Word",
+    y = "Count"
+  ) +
+  scale_fill_brewer(palette="Accent")
+```
+
+```{r}
+lemma_filtered |>
+  ggplot(
+    aes(
+      x = reorder(lemma, -lemma_count),
+      y = lemma_count,
+      fill = disambig
+    )
+  ) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+  ) +
+  labs(
+    x = "Lemma",
+    y = "Count",
+    title = "word form frequency distribution (disambiguated aspect)"
+  ) + scale_fill_brewer(palette="Accent")
+```
+
+The distribution of grammatical categories within our dataset is presented below. It is evident that the _[PAD]_ value, indicating the absence of a feature value, appears across all categories except for the _VerbForm_ feature. Additionally, the dataset clearly marks only the third person, while several categories are notably undersampled, including the _neutral gender_, _future tense_, _imperative mood_, and _infinitive verb form_. Despite this imbalance, these categories are retained in the dataset because the absence of certain grammatical categories is itself an important feature. As previously mentioned, we aim to train our models on the natural distribution of features to better reflect real-world linguistic patterns.
+
+```{r}
+grid.arrange(
+  create_barplot(data, "Gender", 45, custom_order = c("[PAD]", "Masc", "Fem", "Neut" )),
+  create_barplot(data, "Mood", 45, custom_order = c("[PAD]", "Ind", "Imp")),
+  create_barplot(data, "Number", 45, custom_order = c("[PAD]", "Sing", "Plur")),
+  create_barplot(data, "Person", 45, custom_order = c("[PAD]", "1", "2", "3")),
+  create_barplot(data, "Tense", 45, custom_order = c("[PAD]", "Pres", "Past", "Fut")),
+  create_barplot(data, "VerbForm", 45, custom_order = c("[PAD]", "Fin", "Inf", "Part")),
+  create_barplot(data, "Voice", 45, custom_order = c("[PAD]", "Act")),
+  ncol = 3,
+  top = textGrob(
+    "Grammar", 
+    gp=gpar(
+      fontsize=12,
+      fontface="bold"
+    )
+  )
+)
+```
+
+The distribution of graphematic variables is shown below. It is evident that words consist of at least two characters, as the [PAD] value appears only in features representing graphemes at the third position from the word boundary. We hypothesize that including all these features may lead the model to overfit by memorizing the vocabulary, especially considering the fact that mean word length in the dataset is 6 letters, which basically means our models will have access to whole words. However, some of these features could serve as useful markers of aspect, as they potentially correspond to affixes.
+```{r}
+grid.arrange(
+  create_barplot(data, "l_gr_1") + labs(x = "1st left grammeme", fill="grapheme", title = NULL),
+  create_barplot(data, "r_gr_1") + labs(x = "1st right grammeme", fill="grapheme", title = NULL),
+  ncol = 2,
+  top = textGrob(
+    "Graphical markers", 
+    gp=gpar(
+      fontsize=12,
+      fontface="bold"
+    )
+  )
+)
+```
+```{r}
+grid.arrange(
+  create_barplot(data, "l_gr_2", 0) + labs(x = "2nd left grammeme", fill="grapheme", title = NULL),
+  create_barplot(data, "r_gr_2", 0) + labs(x = "2nd right grammeme", fill="grapheme", title = NULL),
+  ncol = 2,
+  top = textGrob(
+    "Graphical markers", 
+    gp=gpar(
+      fontsize=12,
+      fontface="bold"
+    )
+  )
+)
+```
+```{r}
+grid.arrange(
+  create_barplot(data, "l_gr_3", 0) + theme(axis.text.x = element_blank()) + labs(x = "3rd left grammeme", fill="grapheme", title = NULL),
+  create_barplot(data, "r_gr_3", 0) + theme(axis.text.x = element_blank()) + labs(x = "3rd right grammeme", fill="grapheme", title = NULL),
+  ncol = 2,
+  top = textGrob(
+    "Graphical markers", 
+    gp=gpar(
+      fontsize=12,
+      fontface="bold"
+    )
+  )
+)
+```
+
+Finally, we examine the correlations between features in our training dataset. The correlation plot demonstrates that all grammatical features, except for _Number_, exhibit strong intercorrelations. Moderate correlations are also observed among certain graphematic and grammatical features. An unexpected correlation between the adverbal modifier count and verb polarity can be explained by the annotation conventions in the Serbian UD dataset. Specifically, negative particles such as "ne" and negative verb forms like "nisam" and "neće" are treated as adverbal modifiers, thereby contributing to the adverbal modifier count.
+```{r}
+for_corrplot <- data |>
+  mutate(
+    across(
+      where(is.factor),
+      ~as.numeric(factor(.))
+    )
+  ) |>
+  select(
+    -lemma,
+    -aspect,
+    -disambig
+  )
+cor_matrix <- cor(for_corrplot, use = "pairwise.complete.obs")
+corrplot(cor_matrix, method = "circle")
+```
+
+In conclusion, the analyzed features are suitable for modeling, and no feature removal or advanced engeering is necessary. After appropriate labeling and one-hot encoding, these features are ready to be utilized in the model training process.
+
+## Experiment procedure
+
+The dataset was divided into three subsets: the Training set (80%), the Holdout Testing set (10%), and the Unknown Testing set (10%). This division is motivated by the fact that the dataset includes only the most frequent verbs from the Serbian UD. As a result, after standard dataset shuffling and train-test splitting these verbs may appear in both training and testing subsets, allowing the model to encounter identical words during both fitting and evaluation phases. Such overlap can and likely will lead to model overfitting, causing both training and testing metrics to exhibit similarly high performance, which is misleading because the model is essentially being evaluated on data it has already seen. To address this issue, the Unknown Testing set consists of words that do not appear in the training data, thereby providing a more reliable evaluation of the model’s generalization capability and ensuring the detection of overfitting.
+
+We created three versions of the training dataset: (1) the original dataset with the "aspect" target variable, (2) the original dataset with the "disambig" target variable, and (3) a resampled version of the original dataset in which each verb lemma appears exactly 10 times, with the "aspect" target variable.
+
+Each training dataset was further divided into multiple subsets, each representing different combinations of features. These subsets included all six graphematic features, four out of six graphematic features, all grammatical features, a combination of all graphematic and grammatical features, word embeddings, and others. The graphematic features were selected based on the design employed in experiments on grammatical gender prediction in Nakh language [5]. All textual features were embedded using a Continuous Bag of Words (CBOW) Word2Vec model developed by TESLA AI [6]. The detailed composition of all subsets is presented below:
+
+```{r}
+# distinct_experiments <- combined_metrics |> distinct(experiment_name)
+# cat(distinct_experiments$experiment_name, sep="\n")
+```
+- `all categorical` — all categorical variables one-hot encoded
+- `all categorical PCA` — all categorical variables one-hot encoded with PCA applied
+- `6_graphemes` — all 6 graphemes one-hot encoded
+- `4_graphemes` — only 1st and 2nd graphemes from sides one-hot encoded
+- `2_graphemes` — only 1st graphemes from sides one-hot encoded
+- `sufs` — all graphemes combined into 3-letter strings one-hot encoded
+- `6_graphemes PCA` — all 6 graphemes one-hot encoded with PCA applied
+- `4_graphemes PCA` — only 1st and 2nd graphemes from sides one-hot encoded with PCA applied
+- `2_graphemes PCA` — only 1st graphemes from sides one-hot encoded with PCA applied
+- `sufs PCA` — all graphemes combined into 3-letter strings one-hot encoded with PCA applied
+- `all grammar` — all grammatical and functional-dependencies features one-hot encoded
+- `only categories grammar` — only grammatical features one-hot encoded
+- `no categories grammar` — only  functional-dependencies features one-hot encoded
+- `all grammar PCA` — all grammatical and functional-dependencies features one-hot encoded with PCA applied
+- `only categories grammar PCA` — only grammatical features one-hot encoded with PCA applied
+- `no categories grammar PCA` —  only  functional-dependencies features one-hot encoded with PCA applied
+- `grammar and graphemes` — "only categories grammar" and "4_graphemes" together one-hot encoded
+- `grammar and graphemes PCA` — "only categories grammar" and "4_graphemes" together one-hot encoded with PCA applied
+- `word embeddings` — verb forms embedded with word2vec 
+- `lemma embeddings` — verb lemmas embedded with word2vec 
+- `word and lemma embeddings` —  verb forms and lemmas embedded with word2vec 
+- `word and lemma embeddings many` — verb forms and lemmas embedded with word2vec, but training dataset is extended with form-embeddings samples
+- `word embeddings many` — verb forms embedded with word2vec, but training dataset is extended
+- `word embeddings nsubj` — verb forms and verb nsubj dependencies embedded with word2vec
+- `word embeddings obj` — verb forms and verb obj dependencies embedded with word2vec
+- `word embeddings obl` — verb forms and verb obl dependencies embedded with word2vec
+- `word embeddings advmod` — verb forms and verb advmod dependencies embedded with word2vec
+- `word embeddings ctx` —  verb forms and 3-word context window embedded with word2vec. Context vectors are summarized, target verb vector is separated and held as-is.
+- `word embeddings ctx 3` — same as `word embeddings ctx`
+- `word embeddings ctx 2` — same as `word embeddings ctx`, but only 2-word window
+- `word embeddings ctx 1` — same as `word embeddings ctx`, but unly 1-word window
+- `word embeddings ctx 3 split` — same as `word embeddings ctx 3`, but left and right contexts are separated 
+- `word embeddings ctx 2 split` — same as `word embeddings ctx 2`, but left and right contexts are separated 
+- `word embeddings ctx 1 split` — same as `word embeddings ctx 1`, but left and right contexts are separated 
+
+We selected four models for our experiments: 
+
+- Logistic Regression (baseline Scikit-learn with a maximum of 200 training iterations) 
+- Decision Tree (baseline Scikit-learn with random state set to 42) 
+- Gradient Boosting (baseline LightGBM on decision trees with random state set to 42) 
+- Three-layer perceptron (baseline Scikit-learn with random state set to 42; hidden layers with sizes 100, 50, and 25; alpha coefficient of 0.0001; maximum of 200 training iterations)
+
+Each model was trained on every subset of each variation of the dataset and subsequently evaluated on the corresponding testing subsets. We measured the mean 5-fold cross-validation weighted F1 score on the training data, as well as the weighted F1 scores on both the Holdout test set and the Unknown test set. The results were systematically recorded for analysis.
+
+## Experiment results evaluation
+
+The distribution of the evaluation metrics is presented below. The density plot illustrates that while both the cross-validation F1 and holdout F1 scores are consistently high across most experiments, the F1 scores on the unknown test set are generally lower. Only a small subset of models demonstrate strong predictive performance on this more challenging evaluation set.
+```{r}
+combined_metrics_long <- pivot_longer(
+  combined_metrics,
+  cols = c(F1_cv, F1_holdout, F1_unkn),
+  names_to = "metric",
+  values_to = "score"
+)
+
+ggplot(combined_metrics_long, aes(x = score, fill = metric)) +
+  geom_density(alpha = 0.33) +
+  labs(title = "Distribution of F1 Scores",
+       x = "F1 Score",
+       y = "Density") +
+  theme_minimal()
+```
+
+```{r}
+plot_ly(
+  data = combined_metrics,
+  x = ~F1_holdout,      
+  y = ~F1_unkn,      
+  z = ~F1_cv,  
+  color = ~dataset_version,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 5, opacity = 0.6),
+  text = ~paste(
+    "Model:",
+    model_name,
+    "<br>Experiment:",
+    experiment_name
+  ),
+  hoverinfo = "text"
+) |>
+  layout(
+    title = "Scatter Plot of F1 Scores",
+    scene = list(
+      xaxis = list(title = "F1 Holdout"),
+      yaxis = list(title = "F1 Unknown"),
+      zaxis = list(title = "F1 CV"),
+      camera = list(
+        eye = list(x = -1.8, y = -1, z = 0.8), 
+        up = list(x = 0, y = 0, z = 0.5) 
+      )
+    )
+  )
+```
+
+The difference can also be proved with ANOVA test (or non-parametric analogues). For it to work, we first should prove that our metrics distribution is normal using Shapiro test:
+
+```{r}
+# No NA values
+combined_metrics |>
+  map_int(~sum(is.na(.)))
+```
+```{r}
+shap <- shapiro.test(combined_metrics$F1_cv)
+
+ggplot(
+  combined_metrics,
+  aes(sample = F1_cv)
+) + 
+stat_qq() +
+stat_qq_line() +
+ggtitle(
+  paste(
+      "F1 CV QQ Plot (W = ",
+      round(shap$statistic, 3),
+      "p-val = ",
+      round(shap$p.value, 10),
+      ")"
+  )
+) +
+theme_minimal()
+```
+```{r}
+shap <- shapiro.test(combined_metrics$F1_holdout)
+
+ggplot(
+  combined_metrics,
+  aes(sample = F1_holdout)
+) + 
+stat_qq() +
+stat_qq_line() +
+ggtitle(
+  paste(
+      "F1 Holdout QQ Plot (W = ",
+      round(shap$statistic, 3),
+      "p-val = ",
+      round(shap$p.value, 10),
+      ")"
+  )
+) +
+theme_minimal()
+```
+
+```{r}
+shap <- shapiro.test(combined_metrics$F1_unkn)
+
+ggplot(
+  combined_metrics,
+  aes(sample = F1_unkn)
+) + 
+stat_qq() +
+stat_qq_line() +
+ggtitle(
+  paste(
+      "F1 Unknown QQ Plot (W = ",
+      round(shap$statistic, 3),
+      "p-val = ",
+      round(shap$p.value, 10),
+      ")"
+  )
+) +
+theme_minimal()
+```
+
+In all cases here we have abnormal distribution. Therefor, we shall use Wilcoxon Signed-Rank Test.
+
+```{r}
+wilcox_test_result_cv <- wilcox.test(
+  combined_metrics$F1_unkn,
+  combined_metrics$F1_cv,
+  paired = TRUE,
+  alternative = "less"
+)
+
+wilcox_test_result_holdout <- wilcox.test(
+  combined_metrics$F1_unkn,
+  combined_metrics$F1_holdout,
+  paired = TRUE,
+  alternative = "less"
+)
+
+wilcox_test_result_cv
+```
+```{r}
+wilcox_test_result_holdout
+```
+```{r}
+wilcox_test_result <- wilcox.test(
+  combined_metrics$F1_holdout, 
+  combined_metrics$F1_cv, 
+  paired = TRUE, 
+  alternative = "two.sided"
+)
+wilcox_test_result
+```
+The results of the Wilcoxon tests confirm significant differences in F1 scores between the datasetsSpecifically, for the cross-validation dataset the test statistic is (V = 5203, p-value < 2.2e-16), and for holdout dataset it is (V = 3640.5, p-value < 2.2e-16). These results indicate that the F1 scores on the unknown test set are significantly lower than those on both the cross-validation and holdout sets, with p-values well below the 0.05 significance threshold. Therefore, we can conclude that our hypothesis regarding overfitting is supported, and the inclusion of the unknown test set was a justified and effective decision. The results of two-sided Wilcoxon test (V = 56897, p-value < 2.2e-16) also show significant difference between cross-validation and holdout metrics, with cross-validation being a bit lower, as can be observed from the dencity plot.
+
+
+```{r}
+cliff.delta(combined_metrics$F1_cv, combined_metrics$F1_holdout)
+```
+
+```{r}
+cliff.delta(combined_metrics$F1_cv, combined_metrics$F1_unkn)
+```
+```{r}
+cliff.delta(combined_metrics$F1_holdout, combined_metrics$F1_unkn)
+```
+The tiny negative value (delta estimate: -0.05228157) of Cliff delta suggests cross-validation F1 is very slightly lower than holdout F1, but the effect is negligible and not statistically significant, while holdout F1 and cross-validation F1 (delta estimate: 0.5923263, 0.618458) both are substantially higher than Unknown F1. Same can once again be shown on the boxplot below.
+```{r}
+melted_metrics <- combined_metrics |> 
+  pivot_longer(
+    cols = c(F1_cv, F1_holdout, F1_unkn), 
+    names_to = "metric_type", 
+    values_to = "score"
+  )
+
+ggplot(
+  melted_metrics,
+  aes(
+    x = dataset_version,
+    y = score,
+    fill = dataset_version)
+  ) +
+  geom_boxplot() +
+  facet_wrap(~metric_type) +
+  labs(
+    title = "Model Performance Across Dataset Versions",
+    x = "Dataset Version",
+    y = "F1 Score"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Accent")
+
+```
+
+Next, we aimed to determine whether Principal Component Analysis (PCA) affects our evaluation metrics. We conducted Mann–Whitney U tests to determine if there is any statistical difference. The results across all three cases — (W = 24372, p-value < 2.2e-16 for F1_cv), (W = 24980, p-value < 2.2e-16 for F1_holdout) and (W = 24372, p-value < 2.2e-16 for F1_unkn) — indicate an extremely statistically significant difference in metric values between experiments with and without PCA. The boxplot below clearly demonstrates that PCA consistently and substantially hurts performance across all dataset variations.
+
+```{r}
+wilcox.test(F1_cv ~ PCA, data = combined_metrics)
+```
+```{r}
+wilcox.test(F1_holdout ~ PCA, data = combined_metrics)
+```
+```{r}
+wilcox.test(F1_cv ~ PCA, data = combined_metrics)
+```
+```{r}
+ggplot(
+  melted_metrics,
+  aes(
+    x = PCA,
+    y = score,
+    fill = PCA)
+  ) +
+  geom_boxplot() +
+  facet_wrap(~metric_type) +
+  labs(
+    title = "Model Performance Across Dataset Versions",
+    x = "Dataset Version",
+    y = "F1 Score"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Accent")
+```
+
+Next we want to determine if dataset version affects performance or not. The Kruskal-Wallis test results for cv dataset (chi-squared = 2.3096, df = 2, p-value = 0.3151) and for unknown dataset (chi-squared = 5.0666, df = 2, p-value = 0.0794) indicate that there is no statistically significant difference in F1_cv scores across the different dataset versions in our data. However, the holdout test results (chi-squared = 9.7544, df = 2, p-value = 0.007618) indicate that there is statistical difference between them. Pairwise comparisons using Wilcoxon rank sum test with continuity correction indicate that resampled datasets significantly statistically differ from others, and the median comparisons indicate that resampled training set is significantly worse than both original and disambiguated ones.
+```{r}
+kruskal.test(F1_cv ~ dataset_version, data = combined_metrics)
+```
+```{r}
+kruskal.test(F1_holdout ~ dataset_version, data = combined_metrics)
+```
+```{r}
+kruskal.test(F1_unkn ~ dataset_version, data = combined_metrics)
+```
+```{r}
+pairwise.wilcox.test(
+  combined_metrics$F1_holdout,
+  combined_metrics$dataset_version,
+  p.adjust.method = "holm"
+)
+```
+```{r}
+combined_metrics |>
+  group_by(dataset_version) |>
+  summarise(median_F1 = median(F1_holdout))
+```
+And now for the interesting part. We shall see which models performed better overall and which subsets did better. First, we will conduct pairwise wilcoxon test for experiments without PCA, as we have already determined it's effect on models' performance is harmful. The results of the test indicate that performance of _LGBM vs MLP_, and of _Logistic Regression vs Decision Tree_ is insignificant, while _LGBM and MLP_ performance significantly differ from _Logistic Regression and Decision Tree_ (they are better, as can also be seen from boxplots below).
+```{r}
+combined_metrics <- combined_metrics |> 
+  filter(PCA == FALSE)
+```
+
+```{r}
+pairwise.wilcox.test(
+  combined_metrics$F1_unkn,
+  combined_metrics$model_name,
+  p.adjust.method = "holm"
+)
+```
+```{r}
+melted_metrics <- combined_metrics |> 
+  pivot_longer(
+    cols = c(F1_cv, F1_holdout, F1_unkn), 
+    names_to = "metric_type", 
+    values_to = "score"
+  )
+ 
+ggplot(
+  melted_metrics,
+  aes(
+    x = model_name,
+    y = score,
+    fill=model_name)
+  ) +
+  geom_boxplot() +
+  labs(
+    title = "Model",
+    x = "Dataset Version",
+    y = "F1 Unknown"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette="Accent")
+
+```
+
+Regarding the comparison of different feature subsets, the Kruskal-Wallis test results (chi-squared = 122.04, degrees of freedom = 25, p-value = 9.664e-15) indicate a statistically significant difference among the subset versions, with a p-value far below the 0.05 threshold. As shown in the table and in the barplot below, the best-performing subsets are those based on Word2Vec embeddings. It seems like this is because the Serbian aspect category is inherently bound to the verb itself and does not depend on the surrounding context.
+
+```{r}
+combined_metrics <- combined_metrics |> 
+  filter(
+    !(
+      model_name %in% c("LogisticRegression", "DecisionTreeClassifier")
+    )
+  )
+```
+
+```{r}
+group_performance <- combined_metrics |>
+  group_by(experiment_name) |>
+  summarise(
+    n = n(),
+    median_F1_cv = median(F1_cv),
+    median_F1_holdout = median(F1_holdout),
+    median_F1_unkn = median(F1_unkn),
+    median_drop = median(F1_holdout - F1_unkn)
+  ) |>
+  arrange(desc(median_F1_unkn))
+
+head(group_performance, 5)
+```
+```{r}
+kruskal.test(F1_holdout ~ experiment_name, data = combined_metrics)
+```
+```{r}
+group_performance_long <- group_performance |>
+  select(
+    experiment_name,
+    median_F1_cv,
+    median_F1_holdout,
+    median_F1_unkn
+  ) |>
+  pivot_longer(
+    cols = starts_with("median_F1"),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+ggplot(
+  group_performance_long,
+  aes(
+    x = Value,
+    y = experiment_name,
+    fill = Metric)
+  ) +
+  geom_bar(
+    stat = "identity",
+    position = "dodge"
+  ) +
+  labs(
+    title = "Median F1 Scores by Experiment",
+    x = "Experiment",
+    y = "Median F1 Score",
+    fill = "Metric"
+  ) +
+  scale_fill_brewer(palette = "Accent")
+```
+
+## Discussion
+
+In this study, we primarily evaluated baseline models, with only limited hyperparameter tuning performed in most cases. This is especially relevant for the MLPClassifier, where alternative network architectures and hyperparameter configurations could potentially yield improved performance. Future work should explore a wider range of architectures, including varying the number and size of hidden layers, activation functions, and regularization techniques.
+
+We did not experiment with the Skip-Gram variant of Word2Vec, as it is generally considered less effective on smaller training corpora compared to the CBOW variant. However, given that Skip-Gram can sometimes capture semantic relationships more effectively, it would be valuable to include it in future experiments, especially if larger or more diverse datasets become available. Improving the quality of word embeddings overall is likely to enhance model performance.
+
+Attempts to leverage a Serbian BERT model for this task did not yield satisfactory results, despite efforts to fine-tune it for both classification and masked language modeling (MLM) objectives. We didn't even include it to the paper. One possible reason is that BERT produces contextual embeddings that represent entire sentences or contexts rather than isolated verb forms, which may reduce its suitability for predicting verbal aspect—a property that is, as we have proved in this particular paper, inherently tied to the inner semantics of a verb itself rather than the verb's surrounding context. Additionally, the relatively small size of our dataset (approximately 5,000 samples) is likely insufficient for effective fine-tuning of such large pretrained models, limiting their potential benefits in this setting.
+
+Analysis of feature importance in the best-performing `grammar and graphemes` LightGBM model revealed that gender categories were among the most influential predictors. This finding is somewhat surprising, as verbal aspect is not expected to be directly related to grammatical gender. This suggests that the model may be exploiting biases present in the dataset rather than learning linguistically meaningful patterns. While these features contribute to model accuracy, it is important to further investigate these biases and consider more robust feature selection or data augmentation strategies to ensure that the model’s predictions are grounded in genuine linguistic cues.
+
+## Conclusion
+
+We have demonstrated that dividing the test data into cross-validation, holdout, and unknown subsets is justified, as the unknown subset clearly reveals hidden model overfitting. Our experiments show that applying PCA consistently degrades performance in our case. Additionally, we found that LightGBM and MLPClassifier significantly outperform other models across all training subsets. Most importantly, we found out that the verbal aspect in Serbian is a purely semantic category, although it can be predicted with reasonably high accuracy using other available features.
+
+## References
+
+1) [UD_Serbian-SET](https://github.com/UniversalDependencies/UD_Serbian-SET/tree/master)
+2) [nltk.parse.dependencygraph module](https://www.nltk.org/api/nltk.parse.dependencygraph.html)
+3) [Rečnik glagola: Sa dopunama (Serbo-Croatian Edition)](https://isbndb.com/book/9788617011503)
+4) [Designing Machine Learning Systems: An Iterative Process for Production-Ready Applications](https://isbnsearch.org/isbn/9781098107963)
+5) [Predicting grammatical gender in Nakh languages: Three methods compared](https://hal.science/hal-03911228/)
+6) [te-sla/Word2VecSr](https://huggingface.co/te-sla/Word2VecSr)
