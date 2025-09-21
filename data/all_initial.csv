@@ -39,14 +39,14 @@ lemma embeddings	W2V	LogisticRegression	False	1.0	1.0	0.556
 lemma embeddings	W2V	DecisionTreeClassifier	False	1.0	1.0	0.314
 lemma embeddings	W2V	LGBMClassifier	False	1.0	1.0	0.78
 lemma embeddings	W2V	MLPClassifier	False	1.0	1.0	0.646
-word and lemma embeddings 	W2V	LogisticRegression	False	0.953	0.985	0.486
-word and lemma embeddings 	W2V	DecisionTreeClassifier	False	0.974	1.0	0.809
-word and lemma embeddings 	W2V	LGBMClassifier	False	0.989	1.0	0.837
-word and lemma embeddings 	W2V	MLPClassifier	False	0.992	0.973	0.565
-word and lemma embeddings many	W2V	LogisticRegression	False	0.95	0.965	0.811
-word and lemma embeddings many	W2V	DecisionTreeClassifier	False	0.998	1.0	0.842
-word and lemma embeddings many	W2V	LGBMClassifier	False	0.999	1.0	0.779
-word and lemma embeddings many	W2V	MLPClassifier	False	0.999	1.0	0.847
+word+lemma embeddings 	W2V	LogisticRegression	False	0.953	0.985	0.486
+word+lemma embeddings 	W2V	DecisionTreeClassifier	False	0.974	1.0	0.809
+word+lemma embeddings 	W2V	LGBMClassifier	False	0.989	1.0	0.837
+word+lemma embeddings 	W2V	MLPClassifier	False	0.992	0.973	0.565
+word+lemma embeddings many	W2V	LogisticRegression	False	0.95	0.965	0.811
+word+lemma embeddings many	W2V	DecisionTreeClassifier	False	0.998	1.0	0.842
+word+lemma embeddings many	W2V	LGBMClassifier	False	0.999	1.0	0.779
+word+lemma embeddings many	W2V	MLPClassifier	False	0.999	1.0	0.847
 word embeddings many	W2V	LogisticRegression	False	0.956	0.964	0.777
 word embeddings many	W2V	DecisionTreeClassifier	False	0.997	0.955	0.649
 word embeddings many	W2V	LGBMClassifier	False	0.999	0.984	0.931
@@ -71,23 +71,27 @@ word+ctx embeddings	W2V_ext	LogisticRegression	False	0.93	0.947	0.741
 word+ctx embeddings	W2V_ext	DecisionTreeClassifier	False	0.914	0.944	0.641
 word+ctx embeddings	W2V_ext	LGBMClassifier	False	0.971	0.989	0.945
 word+ctx embeddings	W2V_ext	MLPClassifier	False	0.969	0.973	0.914
-embeddings nsubj	W2V_ext	LogisticRegression	False	0.449	0.469	0.438
-embeddings nsubj	W2V_ext	DecisionTreeClassifier	False	0.452	0.472	0.434
-embeddings nsubj	W2V_ext	LGBMClassifier	False	0.451	0.472	0.435
-embeddings nsubj	W2V_ext	MLPClassifier	False	0.44	0.491	0.521
-embeddings obj	W2V_ext	LogisticRegression	False	0.341	0.363	0.301
-embeddings obj	W2V_ext	DecisionTreeClassifier	False	0.343	0.368	0.305
-embeddings obj	W2V_ext	LGBMClassifier	False	0.343	0.362	0.301
-embeddings obj	W2V_ext	MLPClassifier	False	0.36	0.367	0.29
-embeddings obl	W2V_ext	LogisticRegression	False	0.341	0.35	0.303
-embeddings obl	W2V_ext	DecisionTreeClassifier	False	0.343	0.354	0.311
-embeddings obl	W2V_ext	LGBMClassifier	False	0.343	0.337	0.289
-embeddings obl	W2V_ext	MLPClassifier	False	0.36	0.357	0.317
-embeddings advmod	W2V_ext	LogisticRegression	False	0.417	0.412	0.451
-embeddings advmod	W2V_ext	DecisionTreeClassifier	False	0.417	0.413	0.451
-embeddings advmod	W2V_ext	LGBMClassifier	False	0.415	0.412	0.451
-embeddings advmod	W2V_ext	MLPClassifier	False	0.419	0.41	0.447
-embeddings ctx	W2V_ext	LogisticRegression	False	0.664	0.679	0.745
-embeddings ctx	W2V_ext	DecisionTreeClassifier	False	0.566	0.557	0.563
-embeddings ctx	W2V_ext	LGBMClassifier	False	0.676	0.71	0.741
-embeddings ctx	W2V_ext	MLPClassifier	False	0.647	0.672	0.713
+nsubj embeddings	W2V_ext	LogisticRegression	False	0.449	0.469	0.438
+nsubj embeddings	W2V_ext	DecisionTreeClassifier	False	0.452	0.472	0.434
+nsubj embeddings	W2V_ext	LGBMClassifier	False	0.451	0.472	0.435
+nsubj embeddings	W2V_ext	MLPClassifier	False	0.44	0.491	0.521
+obj embeddings	W2V_ext	LogisticRegression	False	0.341	0.363	0.301
+obj embeddings	W2V_ext	DecisionTreeClassifier	False	0.343	0.368	0.305
+obj embeddings	W2V_ext	LGBMClassifier	False	0.343	0.362	0.301
+obj embeddings	W2V_ext	MLPClassifier	False	0.36	0.367	0.29
+obl embeddings	W2V_ext	LogisticRegression	False	0.341	0.35	0.303
+obl embeddings	W2V_ext	DecisionTreeClassifier	False	0.343	0.354	0.311
+obl embeddings	W2V_ext	LGBMClassifier	False	0.343	0.337	0.289
+obl embeddings	W2V_ext	MLPClassifier	False	0.36	0.357	0.317
+advmod embeddings	W2V_ext	LogisticRegression	False	0.417	0.412	0.451
+advmod embeddings	W2V_ext	DecisionTreeClassifier	False	0.417	0.413	0.451
+advmod embeddings	W2V_ext	LGBMClassifier	False	0.415	0.412	0.451
+advmod embeddings	W2V_ext	MLPClassifier	False	0.419	0.41	0.447
+all syntax embeddings	W2V_ext	LogisticRegression	False	0.538	0.581	0.602
+all syntax embeddings	W2V_ext	DecisionTreeClassifier	False	0.523	0.578	0.587
+all syntax embeddings	W2V_ext	LGBMClassifier	False	0.536	0.584	0.597
+all syntax embeddings	W2V_ext	MLPClassifier	False	0.529	0.556	0.566
+ctx embeddings	W2V_ext	LogisticRegression	False	0.664	0.679	0.745
+ctx embeddings	W2V_ext	DecisionTreeClassifier	False	0.566	0.557	0.563
+ctx embeddings	W2V_ext	LGBMClassifier	False	0.676	0.71	0.741
+ctx embeddings	W2V_ext	MLPClassifier	False	0.647	0.672	0.713
