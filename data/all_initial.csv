@@ -1,4 +1,5 @@
 experiment_name	experiment_group	model_name	PCA	F1_cv	F1_holdout	F1_unkn
+random baseline	baseline	RandomBaseline	0.453	0.458	0.468
 6_graphemes	Graphemes	LogisticRegression	False	0.889	0.873	0.818
 6_graphemes	Graphemes	DecisionTreeClassifier	False	0.96	0.953	0.519
 6_graphemes	Graphemes	LGBMClassifier	False	0.972	0.967	0.596
